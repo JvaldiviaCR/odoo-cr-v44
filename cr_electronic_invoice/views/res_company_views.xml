@@ -78,10 +78,10 @@
                     <group>
                         <field name="invoice_qr_type"/>
                         <field name="invoice_field_ids" required="[('invoice_qr_type', '=', 'by_info')]" invisible="[('invoice_qr_type', '!=', 'by_info')]">
-                            <tree editable="bottom">
+                            <list editable="bottom">
                                 <field name="sequence" widget="handle" />
                                 <field name="field_id" />
-                            </tree>
+                            </list>
                         </field>
                     </group>
                 </page>

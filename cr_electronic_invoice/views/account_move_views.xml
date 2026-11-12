@@ -123,11 +123,11 @@
         <field name="model">account.move</field>
         <field name="inherit_id" ref="account.view_invoice_tree"/>
         <field name="arch" type="xml">
-            <tree position="attributes">
+            <list position="attributes">
                 <attribute name="decoration-danger">
                     state_tributacion == 'rechazado'
                 </attribute>
-            </tree>
+            </list>
             <field name="state" position="before">
                 <field name="tipo_documento" string="Doc Elect." optional="show"/>
                 <field name="sequence" string="Consecutive" optional="show"/>

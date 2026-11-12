@@ -1723,7 +1723,12 @@ class AccountInvoiceElectronic(models.Model):
         else:
             raise UserError(_('Partner is not assigne to this invoice'))
 
-        compose_form = self.env.ref('account.account_invoice_send_wizard_form', raise_if_not_found=False).sudo()
+        compose_form = (
+            self.env.ref('account.account_move_send_form', raise_if_not_found=False)
+            or self.env.ref('account.account_invoice_send_wizard_form', raise_if_not_found=False)
+        )
+        if compose_form:
+            compose_form = compose_form.sudo()
         ctx = dict(
             default_model='account.move',
             default_res_id=self.id,
@@ -1742,9 +1747,9 @@ class AccountInvoiceElectronic(models.Model):
             'type': 'ir.actions.act_window',
             'view_type': 'form',
             'view_mode': 'form',
-            'res_model': 'account.invoice.send',
-            'views': [(compose_form.id, 'form')],
-            'view_id': compose_form.id,
+            'res_model': 'account.move.send',
+            'views': [(compose_form.id, 'form')] if compose_form else [],
+            'view_id': compose_form.id if compose_form else False,
             'target': 'new',
             'context': ctx,
         }
