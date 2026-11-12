@@ -1,24 +1,8 @@
-from unittest.result import failfast
-from odoo import models, fields, api, _
+from odoo import models
 
-class AccountTaxTemplate(models.Model):
-    _inherit = "account.tax.template"
-
-    # ==============================================================================================
-    #                                          ACCOUNT TAX TEMPLATE
-    # ==============================================================================================
-
-    tax_code = fields.Char(
-        string="Tax Code"
-    )
-    iva_tax_desc = fields.Char(
-        string="VAT Tax Rate",
-        default='N/A'
-    )
-    iva_tax_code = fields.Char(
-        string="VAT Rate Code",
-        default='N/A'
-    )
-    non_tax_deductible = fields.Boolean(
-        string='Indicates if this tax is no deductible for Rent and VAT'
-    )
+# Odoo 18 removed the legacy account.tax.template model. The custom tax fields are
+# defined directly on account.tax in account_tax.py, so this compatibility file is
+# intentionally kept as a no-op to avoid loading obsolete template-model data.
+class AccountTaxTemplate(models.AbstractModel):
+    _description = 'Legacy compatibility stub for removed account.tax.template'
+    _inherit = 'account.tax'

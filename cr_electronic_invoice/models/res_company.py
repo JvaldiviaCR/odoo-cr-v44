@@ -240,18 +240,13 @@ class CompanyElectronic(models.Model):
     # BUSINESS METHODS
     # -------------------------------------------------------------------------
 
-    @api.model
-    def create(self, vals):
-        """ Try to automatically add the Comprobante Confirmation sequence to the company.
-            It will attempt to create and assign before storing. The sequence that is
-            created will be coded with the following syntax:
-                account.invoice.supplier.<tipo>.<company_name>
-            where tipo is: accept, partial or reject, and company_name is either the first word
-            of the name or commercial name.
-        """
-        new_comp_id = super().create(vals)
-        new_comp_id.try_create_configuration_sequences()
-        return new_comp_id
+    @api.model_create_multi
+    def create(self, vals_list):
+        """Try to automatically add the confirmation sequences to each created company."""
+        new_companies = super().create(vals_list)
+        for company in new_companies:
+            company.try_create_configuration_sequences()
+        return new_companies
 
     def write(self, vals):
         if vals.get('date_expiration_sign') or vals.get('range_days'):
