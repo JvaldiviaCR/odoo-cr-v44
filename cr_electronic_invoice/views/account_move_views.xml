@@ -74,7 +74,7 @@
                 <field name="amount_total_electronic_invoice" invisible="[('move_type', 'in', ('out_invoice', 'out_refund'))]"/>
             </xpath>
 
-            <xpath expr="//page[2]" position="after">
+            <xpath expr="//page[@name='other_info']" position="after">
                 <page name="fe_invoice_data" string="Electronic Information" invisible="[('move_type', 'not in', ('out_invoice', 'out_refund', 'in_invoice', 'in_refund'))]">
                     <group id="fe_tab_group" col="2">
                         <group string="Electronic Acceptance" name="fe_in_info_group" colspan="2" col="5" invisible="['|', ('tipo_documento', '=', 'FEC'), ('move_type', 'in', ('out_invoice', 'out_refund'))]">
