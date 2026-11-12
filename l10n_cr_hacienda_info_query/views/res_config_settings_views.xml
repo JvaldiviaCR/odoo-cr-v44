@@ -19,7 +19,7 @@
                             </div>
                         </div>
                         <div class="col-12 col-lg-6 o_setting_box" id="YO Contribuyo">
-                            <div class="o_setting_right_pane" attrs="{'invisible':[('get_yo_contribuyo_information', '=', False)]}">
+                            <div class="o_setting_right_pane" invisible="[('get_yo_contribuyo_information', '=', False)]">
                                 <separator string="YO Contribuyo"/>
                                 <label for="url_base_yo_contribuyo"/>
                                 <br/>
@@ -46,7 +46,7 @@
                             </div>
                         </div>
                         <div class="col-12 col-lg-6 o_setting_box" id="companies_setting">
-                            <div class="o_setting_right_pane" attrs="{'invisible':[('get_tributary_information', '=', False)]}">
+                            <div class="o_setting_right_pane" invisible="[('get_tributary_information', '=', False)]">
                                 <separator string="Tributary information"/>
                                 <label for="url_base"/>
                                 <br/>

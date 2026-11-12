@@ -138,6 +138,7 @@ class PolicyId2(PolicyId):
         'Resoluci%C3%B3n_General_sobre_disposiciones_t%C3%A9cnicas_comprobantes_electr%C3%B3nicos_'
         'para_efectos_tributarios.pdf': {
             'http://www.w3.org/2001/04/xmlenc#sha256': 'DWxin1xWOeI8OuWQXazh4VjLWAaCLAA954em7DMh0h8=',
+        }
     }
 
     def calculate_policy_node(self, node, sign=False):
@@ -195,7 +196,7 @@ class PolicyId2(PolicyId):
                 digest_value.text = digest_data
             else:
                 assert doc_digest_data == digest_data
-            self.cache.setdefault(remote, {})[remote] = digest_data
+            self.cache.setdefault(remote, {})[hash_method] = digest_data
         return policy_id
 
     def calculate_certificate(self, node, key_x509):

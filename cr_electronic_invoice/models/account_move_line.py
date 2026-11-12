@@ -118,10 +118,10 @@ class InvoiceLineElectronic(models.Model):
         subtotal_line = round(base_line - descuento, 5)
 
         # Corregir error cuando un producto trae en el nombre "", por ejemplo: "disco duro"
-        # Esto no debería suceder, pero, si sucede, lo corregimos
-        if self.name[:156].find('"'):
-            detalle_linea = self.name[:160].replace(
-                '"', '')
+        # Esto no debería suceder, pero, si sucede, lo corregimos.
+        detalle_linea = (self.name or '')[:160].replace('"', '')
+        if '"' in (self.name or '')[:156]:
+            detalle_linea = (self.name or '')[:160].replace('"', '')
 
         line = {
             "cantidad": quantity,

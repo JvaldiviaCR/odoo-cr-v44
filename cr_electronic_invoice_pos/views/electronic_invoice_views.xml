@@ -18,7 +18,7 @@
             <field name="inherit_id" ref="point_of_sale.pos_config_view_form"/>
             <field name="arch" type="xml">
                 <xpath expr="//field[@name='journal_id']" position="after">
-                    <button name="create_sequences" type="object" string="Crear Secuencias" attrs="{'invisible':[('FE_sequence_id','!=', False)]}"/>
+                    <button name="create_sequences" type="object" string="Crear Secuencias" invisible="[('FE_sequence_id', '!=', False)]"/>
                 </xpath>
                 <xpath expr="//form/sheet" position="inside">
                     <h2>Electronic Invoice</h2>
@@ -85,7 +85,7 @@
                     <field name="date_issuance" readonly="1"/>
                 </field>
                 <field name="pos_reference" position="after">
-                    <field name="reference_code_id" attrs="{'required':[('pos_order_id','!=',False)]}"/>
+                    <field name="reference_code_id" required="[('pos_order_id', '!=', False)]"/>
                     <field name="pos_order_id"/>
                     <field name="state_tributacion" readonly="1"/>
                     <field name="fname_xml_comprobante" invisible="1" readonly="1"/>
@@ -100,7 +100,7 @@
                     </div>
                 </xpath>
                 <xpath expr="//button[@name='refund']" position="after">
-                    <button name="action_invoice_sent" type="object" string="Re-send mail" attrs="{'invisible':[('state_tributacion','!=','aceptado')]}"/>
+                    <button name="action_invoice_sent" type="object" string="Re-send mail" invisible="[('state_tributacion', '!=', 'aceptado')]"/>
                 </xpath>
             </field>
         </record>
