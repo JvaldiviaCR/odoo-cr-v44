@@ -16,7 +16,6 @@
         'product',
         'uom',
         'sale_management',
-        'sales_team',
         'sale_stock',
         'account',
         'l10n_cr',
