@@ -43,6 +43,6 @@
 
     <!-- MENUITEM -->
 
-    <menuitem id="menu_res_country_neighborhood" name="Neighborhoods" parent="contacts.menu_localization" sequence="2" action="action_res_country_neighborhood"/>
+    <menuitem id="menu_res_country_neighborhood" name="Neighborhoods" parent="contacts.res_partner_menu_config" sequence="2" action="action_res_country_neighborhood"/>
 
 </odoo>
