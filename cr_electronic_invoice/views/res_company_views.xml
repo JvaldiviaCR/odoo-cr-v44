@@ -31,7 +31,7 @@
                     </attribute>
                 </field> -->
             <!-- Página para consultar información de EXONET-->
-            <xpath expr="//page[@name='general_information']" position="after">
+            <xpath expr="//page[@name='general_info']" position="after">
                 <page string="EXONET">
                     <separator string="URL Base"/>
                     <group col="4" colspan="2">
@@ -46,7 +46,7 @@
                 </page>
             </xpath>
 
-            <xpath expr="//page[@name='general_information']" position="after">
+            <xpath expr="//page[@name='general_info']" position="after">
                 <page string="Electronic Invoice">
                     <group cols="2">
                         <group cols="2">
