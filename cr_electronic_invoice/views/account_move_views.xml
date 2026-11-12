@@ -117,7 +117,7 @@
                     state_tributacion == 'rechazado'
                 </attribute>
             </list>
-            <field name="state" position="before">
+            <field name="status_in_payment" position="before">
                 <field name="tipo_documento" string="Doc Elect." optional="show"/>
                 <field name="sequence" string="Consecutive" optional="show"/>
                 <field name="move_type" invisible="1" readonly="1" optional="show"/>
