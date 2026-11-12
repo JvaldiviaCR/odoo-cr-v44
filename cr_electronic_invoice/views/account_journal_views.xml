@@ -6,7 +6,7 @@
             <field name="model">account.journal</field>
             <field name="inherit_id" ref="account.view_account_journal_form"/>
             <field name="arch" type="xml">
-               <xpath expr="//page[@name='journal_entries']" position="after">
+               <xpath expr="//page[1]" position="after">
                     <page string="Electronic Invoice" invisible="[('type', '!=', 'sale')]">
                         <group cols="2">
                             <group cols="2">
