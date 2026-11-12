@@ -17,7 +17,6 @@ class ResConfigSettings(models.TransientModel):
     bccr_email = fields.Char(string="e-mail registered in the BCCR")
     bccr_token = fields.Char(string="Token to use in the BCCR",)
 
-    @api.model
     def get_values(self):
         res = super().get_values()
         get_param = self.env['ir.config_parameter'].sudo().get_param
@@ -25,11 +24,10 @@ class ResConfigSettings(models.TransientModel):
             bccr_username=get_param('bccr_username'),
             bccr_email=get_param('bccr_email'),
             bccr_token=get_param('bccr_token'),
-            exchange_source=get_param('exchange_source'),
+            exchange_source=get_param('exchange_source') or 'disabled',
         )
         return res
 
-    @api.model
     def set_values(self):
         super().set_values()
         set_param = self.env['ir.config_parameter'].sudo().set_param
