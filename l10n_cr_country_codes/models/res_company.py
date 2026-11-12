@@ -6,7 +6,7 @@ from odoo import models, fields, api
 
 class CompanyElectronic(models.Model):
     _name = 'res.company'
-    _inherit = ['res.company', 'mail.thread', ]
+    _inherit = 'res.company'
 
     # Province
     state_id = fields.Many2one("res.country.state",

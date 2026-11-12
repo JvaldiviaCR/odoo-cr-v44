@@ -24,7 +24,7 @@ _TIPOS_CONFIRMACION = (
 
 class CompanyElectronic(models.Model):
     _name = 'res.company'
-    _inherit = ['res.company', 'mail.thread']
+    _inherit = 'res.company'
 
     # ==============================================================================================
     #                                          COMPANY
