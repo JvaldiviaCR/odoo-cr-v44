@@ -37,29 +37,27 @@
                             <td class='d-none d-md-table-cell'>
                                 <span t-field="invoice.invoice_date_due"/>
                             </td>
-                            <td class="tx_status">
-                                <t t-if="invoice.state == 'posted' and invoice.payment_state not in ('in_payment', 'paid', 'reversed')">
-                                    <span class="badge badge-pill badge-info">
-                                        <i class="fa fa-fw fa-clock-o" aria-label="Opened" title="Opened" role="img"></i>
-                                        <span class="d-none d-md-inline"> Waiting for Payment</span>
+                            <td name="invoice_status" class="o_not_editable">
+                                <t t-if="invoice.state == 'posted'" name="invoice_status_posted">
+                                    <span t-if="invoice.currency_id.is_zero(invoice.amount_residual)"
+                                          class="badge rounded-pill text-bg-success">
+                                        <i class="oi oi-fw" data-icon="check" aria-label="Paid" title="Paid" role="img"/>
+                                        Paid
                                     </span>
-                                </t>
-                                <t t-if="invoice.state == 'posted' and invoice.payment_state in ('paid', 'in_payment')">
-                                    <span class="badge badge-pill badge-success">
-                                        <i class="fa fa-fw fa-check" aria-label="Paid" title="Paid" role="img"></i>
-                                        <span class="d-none d-md-inline"> Paid</span>
+                                    <span t-elif="invoice.payment_state == 'in_payment'"
+                                          class="badge rounded-pill text-bg-info">
+                                        <i class="oi oi-fw" data-icon="clock" aria-label="Processing Payment" title="Processing Payment" role="img"/>
+                                        Processing Payment
                                     </span>
-                                </t>
-                                <t t-if="invoice.state == 'posted' and invoice.payment_state == 'reversed'">
-                                    <span class="badge badge-pill badge-success">
-                                        <i class="fa fa-fw fa-check" aria-label="Reversed" title="Reversed" role="img"></i>
-                                        <span class="d-none d-md-inline"> Reversed</span>
+                                    <span t-elif="invoice.payment_state == 'reversed'"
+                                          class="badge rounded-pill text-bg-warning">
+                                        <i class="oi oi-fw" data-icon="undo" aria-label="Reversed" title="Reversed" role="img"/>
+                                        Reversed
                                     </span>
-                                </t>
-                                <t t-if="invoice.state == 'cancel'">
-                                    <span class="badge badge-pill badge-warning">
-                                        <i class="fa fa-fw fa-remove" aria-label="Cancelled" title="Cancelled" role="img"></i>
-                                        <span class="d-none d-md-inline"> Cancelled</span>
+                                    <span t-else=""
+                                          class="badge rounded-pill text-bg-light text-muted" name="invoice_status_waiting_for_payment">
+                                        <i class="oi oi-fw" data-icon="clock" aria-label="Waiting for Payment" title="Waiting for Payment" role="img"/>
+                                        Waiting for Payment
                                     </span>
                                 </t>
                             </td>
