@@ -27,7 +27,7 @@
                         <tr>
                             <td>
                                 <a t-att-href="invoice.get_portal_url()" t-att-title="invoice.name">
-                                    <t t-esc="invoice.name" t-if="invoice.name != '/'"/>
+                                    <t t-out="invoice.name" t-if="invoice.name != '/'"/>
                                     <em t-else="">Draft Invoice</em>
                                 </a>
                             </td>
@@ -70,7 +70,7 @@
                                 <span t-field="invoice.state_tributacion"/>
                             </td>
                             <td class="text-right">
-                                <span t-esc="-invoice.amount_residual if invoice.move_type == 'out_refund' else invoice.amount_residual" t-options='{"widget": "monetary", "display_currency": invoice.currency_id}'/>
+                                <span t-out="-invoice.amount_residual if invoice.move_type == 'out_refund' else invoice.amount_residual" t-options='{"widget": "monetary", "display_currency": invoice.currency_id}'/>
                             </td>
                         </tr>
                     </t>

@@ -69,7 +69,7 @@
                 <attribute name="invisible">False</attribute>
             </xpath>
 
-            <xpath expr="(//field[@name='tax_totals_json'])[last()]" position="after">
+            <xpath expr="(//field[@name='tax_totals'])[last()]" position="after">
                 <field name="amount_tax_electronic_invoice" invisible="[('move_type', 'in', ('out_invoice', 'out_refund'))]"/>
                 <field name="amount_total_electronic_invoice" invisible="[('move_type', 'in', ('out_invoice', 'out_refund'))]"/>
             </xpath>
@@ -130,7 +130,7 @@
     <record id="view_account_move_reverse_inherit" model="ir.ui.view">
         <field name="name">account.move.reverse.form.inherit</field>
         <field name="model">account.move.reverse</field>
-        <field name="inherit_id" ref="account.view_account_invoice_refund"/>
+        <field name="inherit_id" ref="account.view_account_move_reversal"/>
         <field name="arch" type="xml">
             <field name="description" position="after">
                 <field name="reference_code_id"/>
