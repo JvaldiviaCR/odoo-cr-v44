@@ -39,7 +39,7 @@
                 <field name="export" invisible="[('supplier_rank', '>', 0)]" />
             </field>
 
-            <xpath expr="//page[3]" position="after">
+            <xpath expr="//page[@name='sales_purchases']" position="after">
                 <page name="exoneration_config" string="Exoneration" invisible="[('has_exoneration', '!=', True)]">
                     <group col="2">
                         <field name="exoneration_number"/>
