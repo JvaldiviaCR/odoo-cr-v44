@@ -3,7 +3,7 @@ from odoo.tools.misc import get_lang
 
 
 class AccountInvoiceSend(models.TransientModel):
-    _inherit = 'account.invoice.send'
+    _inherit = 'account.move.send'
 
     # -------------------------------------------------------------------------
     # PUBLIC ACTIONS
