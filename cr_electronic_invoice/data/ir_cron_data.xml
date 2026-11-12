@@ -7,7 +7,6 @@
         <field name="code">model._check_hacienda_for_mrs()</field>
         <field name="interval_number">5</field>
         <field name="interval_type">minutes</field>
-        <field name="doall" eval="False" />
     </record>
 
     <record id="ir_cron_FECR_Envia" model="ir.cron">
@@ -17,7 +16,6 @@
         <field name="code">model._send_invoices_to_hacienda()</field>
         <field name="interval_number">10</field>
         <field name="interval_type">minutes</field>
-        <field name="doall" eval="False" />
     </record>
 
     <record id="ir_cron_FECR_Consulta" model="ir.cron">
@@ -27,7 +25,6 @@
         <field name="code">model._check_hacienda_for_invoices()</field>
         <field name="interval_number">5</field>
         <field name="interval_type">minutes</field>
-        <field name="doall" eval="False" />
     </record>
 
     <record id="ir_cron_mr_hacienda_invoice" model="ir.cron">
@@ -37,7 +34,6 @@
         <field name="code">model.send_mrs_to_hacienda()</field>
         <field name="interval_number">10</field>
         <field name="interval_type">minutes</field>
-        <field name="doall" eval="False" />
     </record>
 
     <record id="ir_cron_send_expiration_notice" model="ir.cron">
@@ -47,7 +43,6 @@
         <field name="code">model._cron_send_email_notifications()</field>
         <field name="interval_number">1</field>
         <field name="interval_type">days</field>
-        <field name="doall" eval="False"/>
     </record>
 
     <record id="ir_cron_vat_exoneration_expired" model="ir.cron">
@@ -57,6 +52,5 @@
         <field name="code">model.check_exonerations()</field>
         <field name="interval_number">1</field>
         <field name="interval_type">days</field>
-        <field name="doall" eval="False" />
     </record>
 </odoo>
