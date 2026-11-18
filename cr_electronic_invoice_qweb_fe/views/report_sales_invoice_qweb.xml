@@ -2,19 +2,6 @@
 <odoo>
 <data>
 
-<!-- TO-DO Se debe buscar una mejor forma de heredar las vistar y reemplazar el contenido.
-    Esto porque si a futuro se desea desinstalar el módulo, estas vistan están reemplazadas por un contenido vacío-->
-<template id="sale.report_invoice_document_inherit_sale" inherit_id="account.report_invoice_document">
-</template>
-<template id="sale_stock.report_invoice_document_inherit_sale_stock" inherit_id="account.report_invoice_document">
-</template>
-<template id="stock_account.stock_account_report_invoice_document" inherit_id="account.report_invoice_document">
-</template>
-<template id="pos_sale.report_invoice_document" inherit_id="account.report_invoice_document">
-</template>
-<template id="point_of_sale.report_invoice_document" inherit_id="account.report_invoice_document">
-</template>
-
 <template id="account.report_invoice_document">
     <div class="article" t-att-data-oe-model="o and o._name" t-att-data-oe-id="o and o.id" t-att-data-oe-lang="o and o.env.context.get('lang')">
         <div class="header">
