@@ -743,7 +743,7 @@
     <t t-name="XmlReceipt">
         <receipt align='center' width='40' value-thousands-separator='' >
             <div>FACTURA ELECTRONICA</div>
-            <div>Version Documento: 4.3</div>
+            <div>Version Documento: 4.4</div>
             <div>
                 <h1>RESTAURANTE ALMOSA</h1>
             </div>

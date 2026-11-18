@@ -625,7 +625,7 @@ class PosOrder(models.Model):
                         subject=_('Error'),
                         body='You must configure the economic activity on company profile')
                     continue
-                xml_string_builder = api_facturae.gen_xml_v43(
+                xml_string_builder = api_facturae.gen_xml_v44(
                     doc, sale_conditions, round(total_servicio_gravado, 5),
                     round(total_servicio_exento, 5), total_servicio_exonerado,
                     round(total_mercaderia_gravado, 5), round(total_mercaderia_exento, 5),

@@ -10,7 +10,7 @@ import logging
 import pytz
 import time
 import phonenumbers
-import random
+import secrets
 from cryptography import x509
 from cryptography.hazmat.backends import default_backend
 
@@ -161,7 +161,7 @@ def get_clave_hacienda(doc, tipo_documento, consecutivo, sucursal_id, terminal_i
     codigo_pais = str(phone and phone.country_code or 506)
 
     # Creamos un código de seguridad random
-    codigo_seguridad = str(random.randint(1, 99999999)).zfill(8)
+    codigo_seguridad = str(secrets.randbelow(100000000)).zfill(8)
 
     clave_hacienda = codigo_pais + cur_date + cedula_emisor + \
         consecutivo_mh + situacion_comprobante + codigo_seguridad
@@ -174,6 +174,8 @@ last_tokens = {}
 last_tokens_time = {}
 last_tokens_expire = {}
 last_tokens_refresh = {}
+last_refresh_tokens = {}
+last_refresh_tokens_time = {}
 
 
 def get_token_hacienda(inv, tipo_ambiente):
@@ -182,20 +184,30 @@ def get_token_hacienda(inv, tipo_ambiente):
     global last_tokens_expire
     global last_tokens_refresh
 
-    token = last_tokens.get(inv.company_id.id, False)
-    token_time = last_tokens_time.get(inv.company_id.id, False)
-    token_expire = last_tokens_expire.get(inv.company_id.id, 0)
+    company = getattr(inv, 'company_id', inv)
+    cache_key = (company.id, tipo_ambiente)
+    token = last_tokens.get(cache_key, False)
+    token_time = last_tokens_time.get(cache_key, False)
+    token_expire = last_tokens_expire.get(cache_key, 0)
+    refresh_token = last_refresh_tokens.get(cache_key, False)
+    refresh_time = last_refresh_tokens_time.get(cache_key, False)
+    refresh_expire = last_tokens_refresh.get(cache_key, 0)
     current_time = time.time()
 
     if token and (current_time - token_time < token_expire - 10):
         token_hacienda = token
     else:
-        headers = {}
-        data = {'client_id': tipo_ambiente,
-                'client_secret': '',
-                'grant_type': 'password',
-                'username': inv.company_id.frm_ws_identificador,
-                'password': inv.company_id.frm_ws_password}
+        headers = {'Accept': 'application/json'}
+        if refresh_token and refresh_time and (
+                current_time - refresh_time < refresh_expire - 10):
+            data = {'client_id': tipo_ambiente,
+                    'grant_type': 'refresh_token',
+                    'refresh_token': refresh_token}
+        else:
+            data = {'client_id': tipo_ambiente,
+                    'grant_type': 'password',
+                    'username': company.frm_ws_identificador,
+                    'password': company.frm_ws_password}
 
         # establecer el ambiente al cual me voy a conectar
         endpoint = fe_enums.UrlHaciendaToken[tipo_ambiente]
@@ -203,7 +215,17 @@ def get_token_hacienda(inv, tipo_ambiente):
         try:
             # enviando solicitud post y guardando la respuesta como un objeto json
             response = requests.request(
-                "POST", endpoint, data=data, headers=headers)
+                "POST", endpoint, data=data, headers=headers, timeout=30)
+            if (data.get('grant_type') == 'refresh_token' and
+                    not 200 <= response.status_code <= 299):
+                data = {'client_id': tipo_ambiente,
+                        'grant_type': 'password',
+                        'username': company.frm_ws_identificador,
+                        'password': company.frm_ws_password}
+                last_refresh_tokens.pop(cache_key, None)
+                last_refresh_tokens_time.pop(cache_key, None)
+                response = requests.request(
+                    "POST", endpoint, data=data, headers=headers, timeout=30)
             response_json = response.json()
 
             # F841 local variable 'respuesta' is assigned to but never used
@@ -211,12 +233,21 @@ def get_token_hacienda(inv, tipo_ambiente):
 
             if 200 <= response.status_code <= 299:
                 token_hacienda = response_json.get('access_token')
-                last_tokens[inv.company_id.id] = token
-                last_tokens_time[inv.company_id.id] = time.time()
-                last_tokens_expire[inv.company_id.id] = response_json.get('expires_in')
-                last_tokens_refresh[inv.company_id.id] = response_json.get('refresh_expires_in')
+                if not token_hacienda:
+                    raise UserError(_('Hacienda no devolvió un access_token válido'))
+                last_tokens[cache_key] = token_hacienda
+                last_tokens_time[cache_key] = time.time()
+                last_tokens_expire[cache_key] = response_json.get('expires_in', 300)
+                last_tokens_refresh[cache_key] = response_json.get('refresh_expires_in', 1800)
+                last_refresh_tokens[cache_key] = response_json.get('refresh_token', refresh_token)
+                last_refresh_tokens_time[cache_key] = time.time()
             else:
                 _logger.error('FECR - token_hacienda failed.  error: %s' % (response.status_code))
+                raise UserError(
+                    _('No fue posible obtener el token de Hacienda. '
+                      'Código HTTP: %s. Respuesta: %s') %
+                    (response.status_code, response.text)
+                )
 
         except requests.exceptions.RequestException as e:
             raise Warning(_('Error Obteniendo el Token desde MH. Excepcion %s'), (e))
@@ -239,13 +270,19 @@ def refresh_token_hacienda(tipo_ambiente, token):
         # enviando solicitud post y guardando la respuesta como un objeto json
         response = requests.request("POST", endpoint, data=data, headers=headers)
         response_json = response.json()
+        if not 200 <= response.status_code <= 299:
+            raise UserError(
+                _('No fue posible renovar el token de Hacienda. '
+                  'Código HTTP: %s. Respuesta: %s') %
+                (response.status_code, response.text)
+            )
         token_hacienda = response_json.get('access_token')
         return token_hacienda
     except ImportError:
         raise Warning(_('Error Refrescando el Token desde MH'))
 
 
-def gen_xml_mr_43(clave, cedula_emisor, fecha_emision, id_mensaje,
+def gen_xml_mr_44(clave, cedula_emisor, fecha_emision, id_mensaje,
                   detalle_mensaje, cedula_receptor,
                   consecutivo_receptor,
                   monto_impuesto=0, total_factura=0,
@@ -262,30 +299,33 @@ def gen_xml_mr_43(clave, cedula_emisor, fecha_emision, id_mensaje,
         raise UserError(_('La clave a utilizar es inválida. Debe contener al menos 50 digitos'))
 
     # Obtenemos el número de identificación del Emisor y lo validamos númericamente
+    if not cedula_emisor:
+        raise UserError(_('La cédula del Emisor en el MR es inválida.'))
     mr_cedula_emisor = re.sub('[^0-9]', '', cedula_emisor)
     if len(mr_cedula_emisor) != 12:
         mr_cedula_emisor = str(mr_cedula_emisor).zfill(12)
-    elif mr_cedula_emisor is None:
-        raise UserError(_('La cédula del Emisor en el MR es inválida.'))
 
     mr_fecha_emision = fecha_emision
     if mr_fecha_emision is None:
         raise UserError(_('La fecha de emisión en el MR es inválida.'))
 
     # Verificamos si el ID del mensaje receptor es válido
-    mr_mensaje_id = int(id_mensaje)
-    if mr_mensaje_id < 1 and mr_mensaje_id > 3:
-        raise UserError(_('El ID del mensaje receptor es inválido.'))
-    elif mr_mensaje_id is None:
+    if id_mensaje is None:
         raise UserError(_('No se ha proporcionado un ID válido para el MR.'))
+    mr_mensaje_id = int(id_mensaje)
+    if mr_mensaje_id < 1 or mr_mensaje_id > 3:
+        raise UserError(_('El ID del mensaje receptor es inválido.'))
 
+    if not cedula_receptor:
+        raise UserError(_('No se ha proporcionado una cédula de receptor válida para el MR.'))
     mr_cedula_receptor = re.sub('[^0-9]', '', cedula_receptor)
     if len(mr_cedula_receptor) != 12:
         mr_cedula_receptor = str(mr_cedula_receptor).zfill(12)
-    elif mr_cedula_receptor is None:
-        raise UserError(_('No se ha proporcionado una cédula de receptor válida para el MR.'))
 
     # Verificamos si el consecutivo indicado para el mensaje receptor corresponde a numeros
+    if not consecutivo_receptor:
+        raise UserError(_('La clave del consecutivo para el mensaje receptor es inválida. '
+                        'Debe contener al menos 50 digitos'))
     mr_consecutivo_receptor = re.sub('[^0-9]', '', consecutivo_receptor)
     if len(mr_consecutivo_receptor) != 20:
         raise UserError(_('La clave del consecutivo para el mensaje receptor es inválida. '
@@ -298,10 +338,10 @@ def gen_xml_mr_43(clave, cedula_emisor, fecha_emision, id_mensaje,
     # Iniciamos con la creación del mensaje Receptor
     sb = StringBuilder()
     sb.append('<MensajeReceptor xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" ')
-    sb.append('xmlns="https://cdn.comprobanteselectronicos.go.cr/xml-schemas/v4.3/mensajeReceptor" ')
-    sb.append('xsi:schemaLocation="https://cdn.comprobanteselectronicos.go.cr/xml-schemas/v4.3/mensajeReceptor ')
+    sb.append('xmlns="https://cdn.comprobanteselectronicos.go.cr/xml-schemas/v4.4/mensajeReceptor" ')
+    sb.append('xsi:schemaLocation="https://cdn.comprobanteselectronicos.go.cr/xml-schemas/v4.4/mensajeReceptor ')
     sb.append('https://www.hacienda.go.cr/ATV/ComprobanteElectronico/' +
-              'docs/esquemas/2016/v4.3/MensajeReceptor_V4.3.xsd">')
+              'docs/esquemas/2024/v4.4/MensajeReceptor_V4.4.xsd">')
     sb.append('<Clave>' + mr_clave + '</Clave>')
     sb.append('<NumeroCedulaEmisor>' + mr_cedula_emisor + '</NumeroCedulaEmisor>')
     sb.append('<FechaEmisionDoc>' + mr_fecha_emision + '</FechaEmisionDoc>')
@@ -316,7 +356,8 @@ def gen_xml_mr_43(clave, cedula_emisor, fecha_emision, id_mensaje,
     if codigo_actividad:
         sb.append('<CodigoActividad>' + str(codigo_actividad) + '</CodigoActividad>')
 
-    sb.append('<CondicionImpuesto>' + str(condicion_impuesto) + '</CondicionImpuesto>')
+    if condicion_impuesto is not None:
+        sb.append('<CondicionImpuesto>' + str(condicion_impuesto) + '</CondicionImpuesto>')
 
     # TODO: Estar atento a la publicación de Hacienda de cómo utilizar esto
     if monto_total_impuesto_acreditar:
@@ -339,7 +380,10 @@ def gen_xml_mr_43(clave, cedula_emisor, fecha_emision, id_mensaje,
 
     return str(sb)
 
-def gen_xml_v43(inv, sale_conditions, total_servicio_gravado,
+gen_xml_mr_43 = gen_xml_mr_44
+
+
+def gen_xml_v44(inv, sale_conditions, total_servicio_gravado,
                 total_servicio_exento, totalServExonerado,
                 total_mercaderia_gravado, total_mercaderia_exento,
                 totalMercExonerada, totalOtrosCargos, total_iva_devuelto, base_total,
@@ -383,7 +427,9 @@ def gen_xml_v43(inv, sale_conditions, total_servicio_gravado,
               fe_enums.XmlnsHacienda[inv.tipo_documento] + '" ')
     sb.append('xmlns:ds="http://www.w3.org/2000/09/xmldsig#" xmlns:xsd="http://www.w3.org/2001/XMLSchema" ')
     sb.append('xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" ')
-    sb.append('xsi:schemaLocation="' + fe_enums.schemaLocation[inv.tipo_documento] + '">')
+    sb.append('xsi:schemaLocation="' +
+              fe_enums.XmlnsHacienda[inv.tipo_documento] + ' ' +
+              fe_enums.schemaLocation[inv.tipo_documento] + '">')
 
     sb.append('<Clave>' + inv.number_electronic + '</Clave>')
     sb.append('<CodigoActividad>' + inv.economic_activity_id.code + '</CodigoActividad>')
@@ -661,6 +707,9 @@ def gen_xml_v43(inv, sale_conditions, total_servicio_gravado,
     return sb
 
 
+gen_xml_v43 = gen_xml_v44
+
+
 # Funcion para enviar el XML al Ministerio de Hacienda
 def send_xml_fe(inv, token, date, xml, tipo_ambiente):
     headers = {'Authorization': 'Bearer ' +
@@ -726,7 +775,17 @@ def schema_validator(xml_file, xsd_file) -> bool:
     :return:
     """
 
-    xmlschema = etree.XMLSchema(etree.parse(os.path.join(os.path.dirname(__file__), "xsd/" + xsd_file)))
+    xsd_path = os.path.join(
+        os.path.dirname(os.path.dirname(__file__)),
+        "data",
+        "xsd-4.4",
+        xsd_file,
+    )
+    if not os.path.exists(xsd_path):
+        raise UserError(
+            _('El esquema XSD Hacienda v4.4 no está instalado: %s') % xsd_file
+        )
+    xmlschema = etree.XMLSchema(etree.parse(xsd_path))
 
     xml_doc = base64decode(xml_file)
     root = etree.fromstring(xml_doc, etree.XMLParser(remove_blank_text=True))

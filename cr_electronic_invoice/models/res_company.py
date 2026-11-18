@@ -1,8 +1,11 @@
 
 
 from datetime import datetime, timedelta
+import importlib.util
+import os
 
 import phonenumbers
+from lxml import etree
 
 from odoo import models, fields, api, _
 from odoo.exceptions import UserError
@@ -190,7 +193,7 @@ class CompanyElectronic(models.Model):
     def test_get_token(self):
         self.get_expiration_date()
         token_m_h = api_facturae.get_token_hacienda(
-            self.env.user, self.frm_ws_ambiente)
+            self, self.frm_ws_ambiente)
         if token_m_h:
             self.message_post(
                 subject=_('Info'),
@@ -199,6 +202,106 @@ class CompanyElectronic(models.Model):
             self.message_post(
                 subject=_('Error'),
                 body=_("Datos Incorrectos"))
+
+    def action_hacienda_setup_check(self):
+        checks = []
+
+        required_packages = (
+            'cryptography',
+            'OpenSSL',
+            'lxml',
+            'xmlsig',
+            'phonenumbers',
+        )
+        missing_packages = [
+            package for package in required_packages
+            if importlib.util.find_spec(package) is None
+        ]
+        checks.append(
+            ('OK', 'Dependencias Python')
+            if not missing_packages
+            else ('FALTA', 'Dependencias Python: %s' % ', '.join(missing_packages))
+        )
+
+        data_dir = os.path.join(
+            os.path.dirname(os.path.dirname(__file__)),
+            'data',
+            'xsd-4.4',
+        )
+        schema_names = (
+            'FacturaElectronica_V4.4.xsd',
+            'FacturaElectronicaExportacion_V4.4.xsd',
+            'FacturaElectronicaCompra_V4.4.xsd',
+            'NotaCreditoElectronica_V4.4.xsd',
+            'NotaDebitoElectronica_V4.4.xsd',
+            'TiqueteElectronico_V4.4.xsd',
+            'ReciboElectronicoPago_V4.4.xsd',
+            'MensajeHacienda_V4.4.xsd',
+            'MensajeReceptor_V4.4.xsd',
+        )
+        invalid_schemas = []
+        for schema_name in schema_names:
+            schema_path = os.path.join(data_dir, schema_name)
+            try:
+                etree.XMLSchema(etree.parse(schema_path))
+            except Exception:
+                invalid_schemas.append(schema_name)
+        checks.append(
+            ('OK', 'Esquemas XSD v4.4')
+            if not invalid_schemas
+            else ('FALTA', 'XSD inválidos: %s' % ', '.join(invalid_schemas))
+        )
+
+        company_checks = (
+            ('Identificación fiscal', bool(self.identification_id and self.vat)),
+            ('Actividad económica', bool(self.activity_id)),
+            ('Provincia', bool(self.state_id)),
+            ('Cantón', bool(self.county_id)),
+            ('Distrito', bool(self.district_id)),
+            ('Dirección', bool(self.street)),
+            ('Certificado', bool(self.signature)),
+            ('PIN del certificado', bool(self.frm_pin)),
+            ('Usuario Hacienda', bool(self.frm_ws_identificador)),
+            ('Contraseña Hacienda', bool(self.frm_ws_password)),
+            ('Ambiente configurado', self.frm_ws_ambiente != 'disabled'),
+        )
+        for label, valid in company_checks:
+            checks.append(('OK', label) if valid else ('FALTA', label))
+
+        if self.signature and self.frm_pin:
+            try:
+                api_facturae.p12_expiration_date(self.signature, self.frm_pin)
+                checks.append(('OK', 'PIN y certificado'))
+            except Exception:
+                checks.append(('FALTA', 'PIN o certificado inválido'))
+
+        missing = [check for check in checks if check[0] == 'FALTA']
+        lines = ['%s: %s' % (status, label) for status, label in checks]
+        body = '\n'.join(lines)
+        self.message_post(
+            subject=_('Asistente de configuración Hacienda v4.4'),
+            body=body,
+        )
+
+        title = _('Configuración Hacienda completa') if not missing else _('Configuración Hacienda incompleta')
+        message = _('La revisión terminó con %s pendientes.') % len(missing)
+        return {
+            'type': 'ir.actions.client',
+            'tag': 'display_notification',
+            'params': {
+                'title': title,
+                'message': message,
+                'sticky': True,
+                'type': 'success' if not missing else 'warning',
+                'next': {
+                    'type': 'ir.actions.act_window',
+                    'res_model': 'res.company',
+                    'res_id': self.id,
+                    'view_mode': 'form',
+                    'target': 'current',
+                },
+            },
+        }
 
     def action_get_economic_activities(self):
         if self.vat:

@@ -771,7 +771,7 @@ class AccountInvoiceElectronic(models.Model):
                                                  body=_('The Total amount of the Invoice for the Message Receiver is invalid'))
                                 continue
 
-                            xml = api_facturae.gen_xml_mr_43(
+                            xml = api_facturae.gen_xml_mr_44(
                                 inv.number_electronic, inv.partner_id.vat,
                                 inv.date_issuance,
                                 tipo, detalle_mensaje, inv.company_id.vat,
@@ -1303,7 +1303,7 @@ class AccountInvoiceElectronic(models.Model):
                     total_impuestos = round(total_impuestos, 5)
                     total_descuento = round(total_descuento, 5)
                     # ESTE METODO GENERA EL XML DIRECTAMENTE DESDE PYTHON
-                    xml_string_builder = api_facturae.gen_xml_v43(
+                    xml_string_builder = api_facturae.gen_xml_v44(
                         inv, sale_conditions, total_servicio_gravado,
                         total_servicio_exento, total_servicio_exonerado,
                         total_mercaderia_gravado, total_mercaderia_exento,
@@ -1318,6 +1318,22 @@ class AccountInvoiceElectronic(models.Model):
                         inv.company_id.signature,
                         inv.company_id.frm_pin,
                         xml_to_sign)
+
+                    xsd_file = api_facturae.fe_enums.xsdFile.get(inv.tipo_documento)
+                    if not xsd_file:
+                        inv.state_tributacion = 'error'
+                        inv.message_post(
+                            subject=_('Error'),
+                            body=_('No hay un esquema XSD v4.4 configurado para este tipo de comprobante'))
+                        continue
+
+                    xml_firmado_base64 = base64.b64encode(xml_firmado)
+                    if not api_facturae.schema_validator(xml_firmado_base64, xsd_file):
+                        inv.state_tributacion = 'error'
+                        inv.message_post(
+                            subject=_('Error'),
+                            body=_('El XML firmado no cumple el esquema XSD Hacienda v4.4'))
+                        continue
 
                     # inv.xml_comprobante = base64.b64encode(xml_firmado)
                     inv.fname_xml_comprobante = inv.tipo_documento + '_' + inv.number_electronic + '.xml'

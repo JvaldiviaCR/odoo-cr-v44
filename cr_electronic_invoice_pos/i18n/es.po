@@ -158,7 +158,7 @@ msgstr ""
 #: model_terms:ir.ui.view,arch_db:cr_electronic_invoice_pos.pos_order_report
 msgid ""
 "<br/>\n"
-"                            Versión Documento: 4.3<br/>"
+"                            Versión Documento: 4.4<br/>"
 msgstr ""
 
 #. module: cr_electronic_invoice_pos

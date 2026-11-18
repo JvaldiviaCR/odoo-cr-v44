@@ -139,7 +139,7 @@
                                 <t t-if="o.tipo_documento=='TE'">TIQUETE ELECTRÓNICO</t>
                                 <t t-if="o.tipo_documento=='NC'">NOTA DE CRÉDITO ELECTRÓNICA</t>
                                 <br/>
-                            Versión Documento: 4.3<br/>
+                            Versión Documento: 4.4<br/>
                             <h2 t-esc="o.user_id.company_id.commercial_name"/>
                             <t t-esc="o.user_id.company_id.name"/>
                             <br/>
