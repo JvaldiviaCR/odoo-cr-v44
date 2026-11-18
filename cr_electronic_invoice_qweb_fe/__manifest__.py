@@ -21,13 +21,16 @@
 
 {
     'name': 'Costa Rica Electronic Invoice QWEB template',
-    'version': '18.0.1.1.0',
-    'author': 'Odoo CR, CYSFuturo',
-    'summary': 'Update Invoice QWEB template to meet DGT requirements for Costa Rica',
-    'description': """Update Invoice QWEB template to meet DGT requirements for Costa Rica""",
+    'version': '18.0.1.2.0',
+    'author': 'Odoo CR, CYSFuturo, CoretechCR',
+    'summary': 'Costa Rica invoice QWeb template, maintained for Odoo 18 by CoretechCR',
+    'description': """Update Invoice QWEB template to meet DGT requirements for Costa Rica.
+
+Original module by Odoo CR and CYSFuturo. Odoo 18 compatibility and ongoing
+maintenance by CoretechCR.""",
     'category': 'Accounting & Finance',
     'sequence': 4,
-    'website': 'http://cysfuturo.com',
+    'website': 'https://coretechcr.com',
     'license': 'AGPL-3',
     'depends': ['cr_electronic_invoice'],
     'data': [
